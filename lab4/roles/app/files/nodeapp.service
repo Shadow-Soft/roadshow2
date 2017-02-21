@@ -1,0 +1,11 @@
+[Unit]
+Description=A NodeJS Based App
+After=syslog.target network.target
+
+[Service]
+User=node
+PIDFile=/var/run/node.pid
+ExecStart=/data/run.sh
+
+[Install]
+WantedBy=multi-user.target

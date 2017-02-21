@@ -1,0 +1,36 @@
+---
+- name: Spin up Azure instance
+  hosts: localhost
+  gather_facts: false
+  vars:
+    group: "a2sfs1"
+    ssh_key_contents: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFk/wCa2W9o/nSfgixzQ4iTPTnH1XBInG46K5PLIG3RdnJYOgOXD+dP7FFzmERRrRg6UYTPaWyMwuJcshe/8UAVGYW1Xy1xki/1bINYuZ/A5onntUN6Vpl1eMuRIse3kCEYIhUfnHPLpvIMFQ9N89Eg1gdx63j6qy4gWdrKNuyl+wOP9BoDMoQ+Gj6nTwCjG2RI5NAciwRc0He4zPAWYsidS8y1jv8ge3Mb7MJLrI+GPn+iTqOe800hxwMf1JRqSqZeYSXBsQdY7amc6A3xVMVT2QbFOak2lAHhzKrAlOUOJrELMqLL9Igqre8k+D7fTWCKY25RIgMNqmfu7tE24r5 root@a2sfs1tower.localdomain"
+    resource_group: "ccsp" 
+    username: "normaluser" 
+    size: "Standard_DS1"
+    offer: "CentOS"
+    publisher: "OpenLogic"
+    sku: "7.2"
+    version: "latest"
+    storage_account: "ccsp"
+  tasks:
+   - name: Launch instance
+     azure_rm_virtualmachine:
+       name: "{{ group }}"
+       resource_group: "{{ resource_group }}"
+       admin_username: "{{ username }}"
+       ssh_password_enabled: false
+       ssh_public_keys:
+         - path: "/home/{{ username }}/.ssh/authorized_keys"
+           key_data: "{{ ssh_key_contents }}"
+       storage_account: "{{ storage_account }}"
+       vm_size: "{{ size }}"
+       tags:
+         group: "{{ group }}"   
+       open_ports:
+         - "3000"
+       image:
+         offer: "{{ offer }}"
+         publisher:  "{{ publisher }}"
+         sku: "{{ sku }}"
+         version: "{{ version }}"

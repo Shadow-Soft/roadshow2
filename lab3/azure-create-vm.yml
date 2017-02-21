@@ -1,0 +1,36 @@
+---
+- name: Spin up Azure instance
+  hosts: localhost
+  gather_facts: false
+  vars:
+    group: "<group name here>"
+    ssh_key_contents: "<ssh pub key contents here>"
+    resource_group: "ccsp" 
+    username: "normaluser" 
+    size: "Standard_DS1"
+    offer: "CentOS"
+    publisher: "OpenLogic"
+    sku: "7.2"
+    version: "latest"
+    storage_account: "ccsp"
+  tasks:
+   - name: Launch instance
+     azure_rm_virtualmachine:
+       name: "{{ group }}"
+       resource_group: "{{ resource_group }}"
+       admin_username: "{{ username }}"
+       ssh_password_enabled: false
+       ssh_public_keys:
+         - path: "/home/{{ username }}/.ssh/authorized_keys"
+           key_data: "{{ ssh_key_contents }}"
+       storage_account: "{{ storage_account }}"
+       vm_size: "{{ size }}"
+       tags:
+         group: "{{ group }}"
+       open_ports:
+         - "3000"   
+       image:
+         offer: "{{ offer }}"
+         publisher:  "{{ publisher }}"
+         sku: "{{ sku }}"
+         version: "{{ version }}"

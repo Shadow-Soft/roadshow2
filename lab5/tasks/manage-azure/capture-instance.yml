@@ -1,0 +1,10 @@
+---
+- name: Capturing the VM Instance to a VHD
+  azure_image_capture:
+     resource_group_name: "{{ resource_group }}"
+     destination_container: captured
+     vm_name: "{{ group }}"
+     vhd_prefix: "{{ group }}"
+  register: result
+- debug: 
+    var: result

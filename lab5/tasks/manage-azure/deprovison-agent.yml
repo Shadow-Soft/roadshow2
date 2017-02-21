@@ -1,0 +1,3 @@
+---
+- name: Deprovisioning the host with waagent (This must be run last)
+  command: waagent -deprovision+user -force

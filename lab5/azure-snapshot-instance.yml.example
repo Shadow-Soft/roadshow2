@@ -1,0 +1,8 @@
+---
+- name: Capture Azure Instance
+  hosts: localhost
+  gather_facts: true
+  tasks:
+   - include_vars: other_vars/azure-instance.yml.example
+   - include: tasks/manage-azure/capture-instance.yml
+   - include: tasks/manage-azure/destroy-instance.yml

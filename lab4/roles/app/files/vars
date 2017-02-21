@@ -1,0 +1,4 @@
+source /etc/profile
+export NODE_ENV=production
+export NPM_CONFIG_LOGLEVEL=info
+export PATH=$PATH:/usr/local/bin

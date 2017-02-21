@@ -1,0 +1,7 @@
+---
+- name: Configure Azure Instance
+  hosts: group_<groupName>
+  remote_user: normaluser
+  become: yes
+  roles:
+   - app

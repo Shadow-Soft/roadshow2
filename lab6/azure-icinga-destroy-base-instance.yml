@@ -1,0 +1,7 @@
+---
+- name: Destroy Icinga 2 Test Machine
+  hosts: localhost
+  gather_facts: false
+  tasks:
+   - include_vars: other_vars/icinga-azure.yml
+   - include: tasks/manage-azure/destroy-instance.yml

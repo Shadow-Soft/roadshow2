@@ -1,0 +1,103 @@
+---
+- name: Installing GCC and GIT For Node
+  yum: 
+    name: "{{ item.name }}"
+    state: installed
+  with_items:
+    - { name: "gcc-c++" }
+    - { name: "git" }
+- name: Add Node Group
+  group:
+    gid: 1002 
+    name: node
+    state: present
+- name: Add Node User
+  user:
+    name: node
+    uid: 1002
+    group: node
+    shell: /bin/bash
+    createhome: yes
+- name: Creating directory for node
+  file: 
+     path: /data
+     state: directory
+     group: node
+     owner: node
+     mode: 0700
+- name: Copy vars file
+  copy:
+     src: vars
+     dest: /etc/vars
+     force: no
+- name: Copy NodeJS App To Server If It Doesn't Exist
+  copy:
+     src: app/
+     dest: /data/
+     force: no
+- name: Copy NodeJS Data To Server
+  copy:
+     src: data
+     dest: /data/
+     force: no
+- name: Alter SELinux Policy To Permissive
+  selinux:
+    policy: targeted
+    state: permissive
+- name: Disable SELINUX for now
+  command: setenforce 0
+- name: Copying Node Libraries
+  unarchive:
+    src: node.tar.gz
+    dest: /usr/local
+    creates: /usr/local/lib/node_modules/
+- name: Setting up symlink for Node
+  file:
+    src: /usr/local/bin/node
+    dest: /usr/local/bin/nodejs
+    owner: node
+    group: node
+    state: link
+- name: Upgrading NPM
+  shell: source /etc/vars && npm install -g npm
+  args:
+    chdir: /data
+- name: Installing all NPM dependencies related to APP
+  shell: source /etc/vars && npm install
+  args:
+    chdir: /data
+    creates: /usr/local/lib/node_modules/grunt-cli/
+- name: Installing and Updating NPM packages
+  shell: source /etc/vars && npm install -g {{ item.name }}
+  args:
+    chdir: /data
+    creates: "{{ item.creates }}"
+  with_items:
+    - { name: 'bower', creates: "/usr/local/lib/node_modules/bower/" }
+    - { name: 'grunt-cli@0.1.13', creates: "/usr/local/lib/node_modules/grunt-cli/" }
+    - { name: 'grunt-sass@0.16.0', creates: "/usr/local/lib/node_modules/grunt-sass/" }
+- name: Copying bowerrc file
+  copy:
+    src: .bowerrc
+    dest: /root/.bowerrc
+    force: no
+- name: Correcting permissions of data directory
+  file:
+    path: /data
+    owner: node
+    group: node
+    mode: 0744
+    recurse: yes
+    state: directory
+- name: Copy Service Script for NodeApp
+  copy: 
+    src: nodeapp.service
+    dest: /etc/systemd/system/nodeapp.service
+    force: no
+- name: Enabling and Starting NodeApp as a Service
+  become: true
+  become_user: root 
+  service: 
+    name: nodeapp.service
+    enabled: yes
+    state: started

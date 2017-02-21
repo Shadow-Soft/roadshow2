@@ -1,0 +1,16 @@
+[
+  {
+    "slug": "deltacloud",
+    "name": "DeltaCloud",
+    "description": "A Ruby API to interact with various cloud platforms",
+    "tags": [
+      "linux",
+      "windows",
+      "osx",
+      "open-source",
+      "cloud-paas",
+      "ruby"
+    ],
+    "url": "http://deltacloud.apache.org"
+  }
+]

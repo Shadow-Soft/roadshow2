@@ -1,0 +1,151 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/VM_IP.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS2"
+    },
+    "adminUserName": {
+      "type": "string"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+	"newOrExistingVnet": {
+      "allowedValues": [ "new", "existing" ],
+      "type": "string",
+      "metadata": {
+        "description":  "Select if this template needs a new VNet or will reference an existing VNet"
+      }
+    },
+	"newOrExistingVnetName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "New or Existing VNet Name"
+      }
+    },
+    "newOrExistingSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "New or Existing subnet Name"
+      }
+    },
+    "existingVnetResourceGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group of the existing VNET"
+     }
+	}
+  },
+  "variables": {
+    "publicIPAddressName": "[concat(parameters('vmName'),'IP')]",
+    "nicName": "[concat(parameters('vmName'),'Nic')]",
+    "publicIPAddressType": "Dynamic",
+	"templatelink": "[concat('https://raw.githubusercontent.com/azure/azure-quickstart-templates/master/101-vm-from-user-image/',parameters('newOrExistingVnet'),'vnet.json')]"
+  },
+  "resources": [
+    {
+        "apiVersion": "2015-01-01",
+        "name": "vnet-template",
+        "type": "Microsoft.Resources/deployments",
+        "properties": {
+            "mode": "incremental",
+            "templateLink": {
+                "uri": "[variables('templatelink')]",
+                "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+                "virtualNetworkName": {
+                    "value": "[parameters('newOrExistingVnetName')]"
+                },
+                "subnetName": {
+                    "value": "[parameters('newOrExistingSubnetName')]"
+                },
+                "existingVnetResourceGroupName": {
+                    "value": "[parameters('existingVnetResourceGroupName')]"
+                }
+            }
+        }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "Microsoft.Resources/deployments/vnet-template"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[reference('vnet-template').outputs.subnet1Ref.value]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "osType": "Linux",
+            "name": "icinga2latest-osDisk.06add21c-fdca-4d68-876e-b6f7dd4361b8.vhd",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "https://icinga2test16994.blob.core.windows.net/system/Microsoft.Compute/Images/captured/icinga2latest-osDisk.06add21c-fdca-4d68-876e-b6f7dd4361b8.vhd"
+            },
+            "vhd": {
+              "uri": "https://icinga2test16994.blob.core.windows.net/vmcontainere8308ed9-5a50-461e-87c5-31b605ec0899/osDisk.e8308ed9-5a50-461e-87c5-31b605ec0899.vhd"
+            },
+            "caching": "ReadOnly"
+          }
+        },
+        "networkProfile": {
+            "networkInterfaces":[{
+                "id":"[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+                }
+            ]
+        },
+		"osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "provisioningState": 0
+      },
+      "name": "[parameters('vmName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "eastus",
+	  "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ]
+    }
+  ]
+}

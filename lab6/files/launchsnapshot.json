@@ -1,0 +1,122 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/VM_IP.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "type": "string"
+    },
+	"username": {
+      "type": "string"
+    },
+	"password": {
+      "type": "securestring"
+    },
+	"vhdurl": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "publicIPAddressName": "[concat(parameters('vmName'),'IP')]",
+    "nicName": "[concat(parameters('vmName'),'Nic')]",
+    "publicIPAddressType": "Dynamic",
+	"templatelink": "https://raw.githubusercontent.com/dsutherland1492/openshift3mlbparks/master/newvnet.json",
+    "vnetname": "[concat(parameters('vmName'),'vnet')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnetname')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [ "10.0.0.0/16" ]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/',variables('vnetname'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              },
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('vnetname')), '/subnets/default')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "osType": "Linux",
+            "name": "[concat(parameters('vmName'),'-osdisk.vhd')]",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "[parameters('vhdurl')]"
+            },
+            "vhd": {
+              "uri": "[concat('https://ccsp.blob.core.windows.net/roadshowdisks/osDisk.',parameters('vmName'),'.vhd')]"
+            },
+            "caching": "ReadOnly"
+          }
+        },
+        "networkProfile": {
+            "networkInterfaces":[{
+                "id":"[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+                }
+            ]
+        },
+		"osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('username')]",
+          "adminPassword": "[parameters('password')]"
+        },
+        "provisioningState": 0
+      },
+      "name": "[parameters('vmName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "eastus",
+	  "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+      ]
+    }
+  ]
+}
+

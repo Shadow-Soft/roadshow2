@@ -1,0 +1,17 @@
+---
+user_to_add: []
+services_to_disable: 
+  - { name: "firewalld" }
+  - { name: "atd" }
+  - { name: "rngd" }
+  - { name: "sysstat" }
+packages_to_remove:
+  - { name: "dmraid" }
+  - { name: "fprintd" }
+  - { name: "iprutils" }
+  - { name: "libstoragemgmt" }
+  - { name: "lvm2" }
+  - { name: "mdadm" }
+  - { name: "ntpdate" }
+  - { name: "plymouth" }
+  - { name: "smartmontools" }
