@@ -1,0 +1,7 @@
+---
+- name: Delete Azure Instance
+  hosts: localhost
+  gather_facts: true
+  tasks:
+   - include_vars: other_vars/azure-instance.yml
+   - include: tasks/manage-azure/destroy-instance.yml
