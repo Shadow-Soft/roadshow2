@@ -19,7 +19,7 @@
     "publicIPAddressName": "[concat(parameters('vmName'),'IP')]",
     "nicName": "[concat(parameters('vmName'),'Nic')]",
     "publicIPAddressType": "Dynamic",
-	"templatelink": "https://raw.githubusercontent.com/dsutherland1492/openshift3mlbparks/master/newvnet.json",
+	"templatelink": "https://raw.githubusercontent.com/Shadow-Soft/roadshow2/master/lab6/files/newvnet.json",
     "vnetname": "[concat(parameters('vmName'),'vnet')]"
   },
   "resources": [
