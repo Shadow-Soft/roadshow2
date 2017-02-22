@@ -10,13 +10,13 @@
         location: eastus
         parameters:
           vhdurl:
-            value: '<insertVHDurl>' 
+            value: 'https://ccsp.blob.core.windows.net/system/Microsoft.Compute/Images/captured/a2sfs1-osDisk.2a23c272-16b4-49d9-91f6-66c1c176879c.vhd' 
           vmName:
-            value: '<insertGroupName>'
+            value: 'grouptestvm'
           username:
             value: 'normaluser'
           password:
-            value: 'RoadShow123'
+            value: 'RoadshowTest123'
         template_link: 'https://raw.githubusercontent.com/Shadow-Soft/roadshow2/master/lab6/files/launchsnapshot.json'
      register: details
    - debug: 
