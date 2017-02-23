@@ -39,7 +39,6 @@
   copy:
      src: data
      dest: /data/
-     force: no
 - name: Alter SELinux Policy To Permissive
   selinux:
     policy: targeted
