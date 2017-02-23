@@ -29,6 +29,7 @@
          group: "{{ group }}"   
        open_ports:
          - "3000"
+         - "22"
        image:
          offer: "{{ offer }}"
          publisher:  "{{ publisher }}"
