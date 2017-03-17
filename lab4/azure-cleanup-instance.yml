@@ -1,0 +1,11 @@
+---
+- name: Deleting SSH Key and Clean up Azure instance
+  hosts: group_<groupname>
+  become: true
+  become_user: normaluser
+  become: yes
+  gather_facts: false
+  tasks:
+   - include_vars: other_vars/azure-instance.yml
+   - include: tasks/users/remove-users.yml
+   - include: tasks/manage-azure/deprovison-agent.yml

@@ -1,0 +1,224 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/VM_IP.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "labInstance": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "labInstance":"[concat('rs',parameters('labInstance'))]",
+    "vmNameTower": "[concat(parameters('labInstance'),'tower')]",
+	"vmNameConjur": "[concat(parameters('labInstance'),'conjur')]",
+    "publicIPAddressName": "[concat(variables('labInstance'),'IP')]",
+    "nicName": "[concat(variables('labInstance'),'Nic')]",
+    "vnetname": "[concat(variables('labInstance'),'vnet')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnetname')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [ "10.0.0.0/16" ]
+        },
+        "subnets": [
+          {
+            "name": "default",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('publicIPAddressName'),'1')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+		"dnsSettings": {
+          "domainNameLabel": "[variables('vmNameTower')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('publicIPAddressName'),'2')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+		"dnsSettings": {
+          "domainNameLabel": "[variables('vmNameConjur')]"
+        }
+      }
+    },
+	{
+      "type": "Microsoft.Network/dnszones/CNAME",
+      "name": "[concat('azlab.shadow-cloud.com/', variables('vmNameTower'))]",
+      "apiVersion": "2016-04-01",
+      "location": "global",
+      "properties": {
+        "TTL": 3600,
+        "CNAMERecord": {
+            "cname": "[concat(variables('vmNameTower'),'.eastus.cloudapp.azure.com')]"
+        }
+      }
+    },
+	{
+      "type": "Microsoft.Network/dnszones/CNAME",
+      "name": "[concat('azlab.shadow-cloud.com/', variables('vmNameConjur'))]",
+      "apiVersion": "2016-04-01",
+      "location": "global",
+      "properties": {
+        "TTL": 3600,
+        "CNAMERecord": {
+            "cname": "[concat(variables('vmNameConjur'),'.eastus.cloudapp.azure.com')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'),'1')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'),'1')]",
+        "[concat('Microsoft.Network/virtualNetworks/',variables('vnetname'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('publicIPAddressName'),'1'))]"
+              },
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('vnetname')), '/subnets/default')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+             "id": "[resourceId('ccsp', 'Microsoft.Network/networkSecurityGroups', 'RoadshowSecurityGroup')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'),'2')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'),'2')]",
+        "[concat('Microsoft.Network/virtualNetworks/',variables('vnetname'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('publicIPAddressName'),'2'))]"
+              },
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('vnetname')), '/subnets/default')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+             "id": "[resourceId('ccsp', 'Microsoft.Network/networkSecurityGroups', 'RoadshowSecurityGroup')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS2"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "osType": "Linux",
+            "name": "[variables('vmNameTower')]",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "https://ccsp.blob.core.windows.net/system/Microsoft.Compute/Images/ansible-rhel7/ansibletower-osDisk.590dcedb-1dd5-47fb-b582-bf304cb86217.vhd"
+            },
+            "vhd": {
+              "uri": "[concat('https://ccsp.blob.core.windows.net/roadshowdisks/osDisk.',variables('vmNameTower'),'.vhd')]"
+            },
+            "caching": "ReadOnly"
+          }
+        },
+        "networkProfile": {
+            "networkInterfaces":[{
+                "id":"[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'1'))]"
+                }
+            ]
+        },
+		"osProfile": {
+          "computerName": "[variables('vmNameTower')]",
+          "adminUsername": "normaluser",
+          "adminPassword": "ShadowSoft2017"
+        },
+        "provisioningState": 0
+      },
+      "name": "[variables('vmNameTower')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "eastus",
+	  "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), '1')]"
+      ]
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS2"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "osType": "Linux",
+            "name": "[variables('vmNameConjur')]",
+            "createOption": "FromImage",
+            "image": {
+              "uri": "https://ccsp.blob.core.windows.net/system/Microsoft.Compute/Images/conjur/conjurv4-osDisk.c739c045-c935-4296-a693-fdac11917c04.vhd"
+            },
+            "vhd": {
+              "uri": "[concat('https://ccsp.blob.core.windows.net/roadshowdisks/osDisk.',variables('vmNameConjur'),'.vhd')]"
+            },
+            "caching": "ReadOnly"
+          }
+        },
+        "networkProfile": {
+            "networkInterfaces":[{
+                "id":"[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'2'))]"
+                }
+            ]
+        },
+		"osProfile": {
+          "computerName": "[variables('vmNameConjur')]",
+          "adminUsername": "normaluser",
+          "adminPassword": "ShadowSoft2017"
+        },
+        "provisioningState": 0
+      },
+      "name": "[variables('vmNameConjur')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "eastus",
+	  "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), '2')]"
+      ]
+    }
+  ]
+}

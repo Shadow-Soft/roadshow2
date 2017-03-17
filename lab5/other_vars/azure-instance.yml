@@ -1,9 +1,3 @@
 ---
-users_to_remove:
-      - { name: "centos" }
-
-group: "<groupname>" 
+group: "grouptestvm" 
 resource_group: "ccsp" 
-
-ssh_users: 
-  - { name: "normaluser" }
