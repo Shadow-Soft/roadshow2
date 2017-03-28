@@ -1,9 +1,0 @@
----
-users_to_remove:
-      - { name: "centos" }
-
-group: "a2sfs1" 
-resource_group: "ccsp" 
-
-ssh_users: 
-  - { name: "normaluser" }

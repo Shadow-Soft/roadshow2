@@ -35,10 +35,14 @@
      src: app/
      dest: /data/
      force: no
+  notify: 
+     - Restart NodeApp
 - name: Copy NodeJS Data To Server
   copy:
      src: data
      dest: /data/
+  notify: 
+     - Restart NodeApp
 - name: Alter SELinux Policy To Permissive
   selinux:
     policy: targeted
@@ -50,6 +54,8 @@
     src: node.tar.gz
     dest: /usr/local
     creates: /usr/local/lib/node_modules/
+  notify: 
+     - Restart NodeApp
 - name: Setting up symlink for Node
   file:
     src: /usr/local/bin/node
@@ -61,11 +67,15 @@
   shell: source /etc/vars && npm install -g npm
   args:
     chdir: /data
+  notify: 
+     - Restart NodeApp
 - name: Installing all NPM dependencies related to APP
   shell: source /etc/vars && npm install
   args:
     chdir: /data
     creates: /usr/local/lib/node_modules/grunt-cli/
+  notify: 
+     - Restart NodeApp
 - name: Installing and Updating NPM packages
   shell: source /etc/vars && npm install -g {{ item.name }}
   args:
@@ -75,11 +85,15 @@
     - { name: 'bower', creates: "/usr/local/lib/node_modules/bower/" }
     - { name: 'grunt-cli@0.1.13', creates: "/usr/local/lib/node_modules/grunt-cli/" }
     - { name: 'grunt-sass@0.16.0', creates: "/usr/local/lib/node_modules/grunt-sass/" }
+  notify: 
+     - Restart NodeApp
 - name: Copying bowerrc file
   copy:
     src: .bowerrc
     dest: /root/.bowerrc
     force: no
+  notify: 
+     - Restart NodeApp
 - name: Correcting permissions of data directory
   file:
     path: /data
@@ -88,11 +102,15 @@
     mode: 0744
     recurse: yes
     state: directory
+  notify: 
+     - Restart NodeApp
 - name: Copy Service Script for NodeApp
   copy: 
     src: nodeapp.service
     dest: /etc/systemd/system/nodeapp.service
     force: no
+  notify: 
+     - Restart NodeApp
 - name: Enabling and Starting NodeApp as a Service
   become: true
   become_user: root 
