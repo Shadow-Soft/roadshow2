@@ -1,5 +1,5 @@
 ---
-- name: Destroy Icinga 2 Test Machine
+- name: Deploy Azure Instance from ARM Template
   hosts: localhost
   gather_facts: false
   tasks:
